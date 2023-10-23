@@ -102,7 +102,7 @@ resource "tls_private_key" "ssh_key" {
 
 resource "local_file" "private_key" {
     content  = tls_private_key.ssh_key.private_key_pem
-    filename = "/Users/mykhailozhuravel/Desktop/Blog/website/terraform/vpc-peering/peering/ec2_key.pem"
+    filename = "ssh/ec2_key.pem"
     file_permission = "0600"
 }
 
@@ -119,7 +119,6 @@ module "ec2-instance-a" {
   instance_type = "t3.small"
   subnet_id = module.vpc-a.public_subnets[0]
   associate_public_ip_address = true
-  user_data = file("shell-a.sh")
 
   key_name = aws_key_pair.public_key.key_name
   vpc_security_group_ids = [aws_security_group.ssh-a.id]
@@ -133,13 +132,12 @@ module "ec2-instance-b" {
   instance_type = "t3.small"
   subnet_id = module.vpc-b.private_subnets[0]
   associate_public_ip_address = false
-  user_data = file("shell-b.sh")
+  user_data = file("shell.sh")
 
   vpc_security_group_ids = [aws_security_group.ssh-b.id]
 }
 
 resource "aws_vpc_peering_connection" "foo" {
-  #peer_owner_id = var.peer_owner_id
   peer_vpc_id   = module.vpc-a.vpc_id
   vpc_id        = module.vpc-b.vpc_id
   auto_accept   = true
@@ -161,11 +159,6 @@ resource "aws_route" "peering_routes-ba" {
   route_table_id            = tolist(module.vpc-b.private_route_table_ids)[count.index]
   destination_cidr_block    = module.vpc-a.vpc_cidr_block
   vpc_peering_connection_id = aws_vpc_peering_connection.foo.id
-}
-
-output "route-a" {
-  description = "The public IP address assigned to the instance"
-  value       = module.vpc-a.public_route_table_ids
 }
 
 output "Connect_to_instance" {
