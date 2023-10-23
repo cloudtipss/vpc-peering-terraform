@@ -166,3 +166,8 @@ output "Connect_to_instance" {
   value       = "ssh -i ${local_file.private_key.filename} ec2-user@${module.ec2-instance-a.public_ip}"
 }
 
+output "Private_ip_instance_b" {
+  description = "The public IP address assigned to the instance"
+  value       = module.ec2-instance-b.private_ip
+}
+
